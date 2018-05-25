@@ -282,6 +282,14 @@ StringFormat::value ComputeStringFormat(const std::string& str,
         return StringFormat::Literal;
       }
       return StringFormat::DoubleQuoted;
+    case PreferUnquoted:
+      if (IsValidPlainScalar(str, flowType, escapeNonAscii)) {
+        return StringFormat::Plain;
+      }
+      if (IsValidLiteralScalar(str, flowType, escapeNonAscii)) {
+        return StringFormat::Literal;
+      }
+      return StringFormat::DoubleQuoted;
     default:
       break;
   }
@@ -362,6 +370,30 @@ bool WriteLiteralString(ostream_wrapper& out, const std::string& str,
        GetNextCodePointAndAdvance(codePoint, i, str.end());) {
     if (codePoint == '\n') {
       out << "\n" << IndentTo(indent);
+    } else {
+      WriteCodePoint(out, codePoint);
+    }
+  }
+  return true;
+}
+
+bool WriteFoldedString(ostream_wrapper& out, const std::string& str,
+                       std::size_t indent) {
+  out << ">\n";
+  out << IndentTo(indent);
+  int codePoint;
+  std::size_t count{0};
+  const std::size_t lf_from = (indent > (80 - 72) ? 72 : (80 - indent));
+
+  for (std::string::const_iterator i = str.begin();
+       GetNextCodePointAndAdvance(codePoint, i, str.end());) {
+    if (count++ >= lf_from && codePoint == ' ')
+    {
+      count = 0;
+      out << "\n" << IndentTo(indent);
+    } else if (codePoint == '\n') {
+      count = 0;
+      out << "\n\n" << IndentTo(indent);
     } else {
       WriteCodePoint(out, codePoint);
     }
