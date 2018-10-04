@@ -377,30 +377,6 @@ bool WriteLiteralString(ostream_wrapper& out, const std::string& str,
   return true;
 }
 
-bool WriteFoldedString(ostream_wrapper& out, const std::string& str,
-                       std::size_t indent) {
-  out << ">\n";
-  out << IndentTo(indent);
-  int codePoint;
-  std::size_t count{0};
-  const std::size_t lf_from = (indent > (80 - 72) ? 72 : (80 - indent));
-
-  for (std::string::const_iterator i = str.begin();
-       GetNextCodePointAndAdvance(codePoint, i, str.end());) {
-    if (count++ >= lf_from && codePoint == ' ')
-    {
-      count = 0;
-      out << "\n" << IndentTo(indent);
-    } else if (codePoint == '\n') {
-      count = 0;
-      out << "\n\n" << IndentTo(indent);
-    } else {
-      WriteCodePoint(out, codePoint);
-    }
-  }
-  return true;
-}
-
 bool WriteChar(ostream_wrapper& out, char ch) {
   if (('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z')) {
     out << ch;
